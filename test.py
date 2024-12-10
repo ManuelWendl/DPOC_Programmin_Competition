@@ -43,9 +43,7 @@ if __name__ == "__main__":
         file = np.load("tests/test" + str(i) + ".npz")
 
         # Begin tests
-        t_start1 = time.time()
         P = compute_transition_probabilities(Constants)
-        t_end1 = time.time() - t_start1
         if not np.all(
             np.logical_or(np.isclose(P.sum(axis=1), 1), np.isclose(P.sum(axis=1), 0))
         ):
@@ -53,9 +51,7 @@ if __name__ == "__main__":
                 "[ERROR] Transition probabilities do not sum up to 1 or 0 along axis 1!"
             )
 
-        t_start2 = time.time()
         Q = compute_expected_stage_cost(Constants)
-        t_end2 = time.time() - t_start2
         passed = True
         if not np.allclose(P, file["P"], rtol=1e-4, atol=1e-7):
             print("Wrong transition probabilities")
@@ -70,18 +66,11 @@ if __name__ == "__main__":
             print("Correct expected stage costs")
 
         # normal solution
-        t_start3 = time.time()
         [J_opt, u_opt] = solution(P, Q, Constants)
-        t_end3 = time.time()-t_start3
         if not np.allclose(J_opt, file["J"], rtol=1e-4, atol=1e-7):
             print("Wrong optimal cost")
             diff = J_opt - file["J"]
             passed = False
         else:
             print("Correct optimal cost")
-            print("Total Elapsed Time:",t_end1 + t_end2 + t_end3)
-            print("Probabilities Elapsed Time:", t_end1)
-            print("Expected Reward Elapsed Time",t_end2)
-            print("Solving Elapsed Time:", t_end3)
-
     print("-----------")

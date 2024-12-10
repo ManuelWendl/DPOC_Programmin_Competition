@@ -55,11 +55,11 @@ def solution(P, Q, Constants):
     # TODO implement Value Iteration, Policy Iteration,
     #      Linear Programming or a combination of these
 
-    solvers = ['VI','PI_VI','PI_SLE','LP']
-    solver = solvers[2]
+    solvers = ['VI','PI_VI','PI_SLE','PI_SLE_Reduced','LP']
+    solver = solvers[3]
 
     if solver == 'VI':
-        epsilon = 1e-6
+        epsilon = 1e-4
         rel_diff = np.inf
         while rel_diff >= epsilon:
             J_opt_new = np.min(Q+np.einsum('ijk,j->ik',P,J_opt),axis=1)
@@ -74,30 +74,49 @@ def solution(P, Q, Constants):
             old_policy = u_opt
             u_opt = np.argmin(Q+np.einsum('ijk,j->ik',P,J_opt),axis=1)
             rel_diff = np.inf
-            while rel_diff >= epsilon:
+            for i in range(10):
+                J_opt_new = Q[np.arange(Constants.K),u_opt.astype(int)]+np.einsum('ij,j->i',P[np.arange(Constants.K),:,u_opt.astype(int)],J_opt)
+                rel_diff = np.max(np.abs(J_opt_new - J_opt))
+                J_opt = J_opt_new
+        while rel_diff >= epsilon:
                 J_opt_new = Q[np.arange(Constants.K),u_opt.astype(int)]+np.einsum('ij,j->i',P[np.arange(Constants.K),:,u_opt.astype(int)],J_opt)
                 rel_diff = np.max(np.abs(J_opt_new - J_opt))
                 J_opt = J_opt_new
 
     if solver == 'PI_SLE':
-        
         old_policy = np.ones_like(u_opt)
         I = np.eye(Constants.K)
         while any(old_policy != u_opt):
             old_policy = u_opt
             u_opt = np.argmin(Q+np.einsum('ijk,j->ik',P,J_opt),axis=1)
-            J_opt = np.linalg.solve(I-P[np.arange(Constants.K),:,u_opt.astype(int)],Q[np.arange(Constants.K),u_opt.astype(int)])            
+            J_opt = np.linalg.solve(I-P[np.arange(Constants.K),:,u_opt.astype(int)],Q[np.arange(Constants.K),u_opt.astype(int)]) 
+
+    if solver == 'PI_SLE_Reduced':
+        considered_states = list(set(range(Constants.K)) - set(Constants.extra_states))
+        J_red = np.zeros(len(considered_states))
+        u_red = np.zeros(len(considered_states))
+        old_policy = np.ones_like(u_red)
+        I = np.eye(len(considered_states))
+        P_red = P[np.ix_(considered_states, considered_states, range(P.shape[2]))]
+        Q_red = Q[considered_states]
+        while any(old_policy != u_red):
+            old_policy = u_red
+            u_red = np.argmin(Q_red+np.einsum('ijk,j->ik',P_red,J_red),axis=1)
+            J_red = np.linalg.solve(I-P_red[np.arange(len(considered_states)),:,u_red.astype(int)],Q_red[np.arange(len(considered_states)),u_red.astype(int)])
+        
+        J_opt[considered_states] = J_red
+        u_opt[considered_states] = u_red
 
     
-    if solver == 'LP':
-        # Not functional yet
-        c = np.ones_like(J_opt)
-        P_reshaped = P.reshape(Constants.K * Constants.L, Constants.K)
-        Q_reshaped = Q.reshape(Constants.K * Constants.L,)
-        eyes = np.repeat(np.eye(Constants.K),Constants.L,axis=0)
-        A = eyes-P_reshaped
+    #if solver == 'LP':
+    #    # Not functional yet
+    #    c = np.ones_like(J_opt)
+    #    P_reshaped = P.reshape(Constants.K * Constants.L, Constants.K)
+    #    Q_reshaped = Q.reshape(Constants.K * Constants.L,)
+    #    eyes = np.repeat(np.eye(Constants.K),Constants.L,axis=0)
+    #    A = eyes-P_reshaped
 
-        J_opt = sc.optimize.linprog(c,A_ub=A,b_ub=Q_reshaped).x
-        u_opt = np.argmin(Q+np.einsum('ijk,j->ik',P,J_opt),axis=1)
+    #    J_opt = sc.optimize.linprog(c,A_ub=A,b_ub=Q_reshaped).x
+    #    u_opt = np.argmin(Q+np.einsum('ijk,j->ik',P,J_opt),axis=1)
 
     return J_opt, u_opt

@@ -19,12 +19,14 @@
 """
 
 import sys, os
-
 import numpy as np
+
 from ComputeExpectedStageCosts import compute_expected_stage_cost
 from ComputeTransitionProbabilities import compute_transition_probabilities
-from Constants import Constants
 from Solver import solution
+
+from Constants import Constants
+import time
 
 if __name__ == "__main__":
     # Set the following to True as you progress with the files
@@ -37,7 +39,9 @@ if __name__ == "__main__":
         sys.stdout.write("[ ] Computing transition probabilities...")
 
         # TODO implement this function in ComputeTransitionProbabilities.py
+        t = time.time()
         P = compute_transition_probabilities(Constants)
+        print('get probs:', time.time()-t)
 
         print("\r[X] Transition probabilities computed.     ")
     else:
@@ -51,7 +55,9 @@ if __name__ == "__main__":
         sys.stdout.write("[ ] Computing expected stage costs...")
 
         # TODO implement this function in ComputeExpectedStageCosts.py
+        t = time.time()
         Q = compute_expected_stage_cost(Constants)
+        print('get costs:', time.time()-t)
 
         print("\r[X] Expected stage costs computed.            ")
     else:
@@ -65,7 +71,9 @@ if __name__ == "__main__":
         sys.stdout.write("[ ] Solving discounted stochastic shortest path problem...")
 
         # TODO implement this function in Solver.py
+        t = time.time()
         J_opt, u_opt = solution(P, Q, Constants)
+        print('solve:', time.time()-t)
 
         assert J_opt.shape[0] == Constants.K, "J_opt dimensions do not match the world."
         assert u_opt.shape[0] == Constants.K, "u_opt dimensions do not match the world."
