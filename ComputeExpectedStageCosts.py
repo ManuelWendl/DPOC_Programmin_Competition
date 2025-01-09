@@ -37,9 +37,11 @@ def compute_expected_stage_cost(Constants):
     """
      # TODO fill the transition probability matrix P here
     try:
+        # Try to reuse stored probabilities in Constants class.
         Q = Constants.TIME_COST + Constants.THRUSTER_COST * np.sum(np.abs(Constants.INPUT_SPACE),1)[None,:] + Constants.DRONE_COST * Constants.Pstart
         Q[Constants.extra_states,:] = 0
     except: 
+        # If not possible, compute the probabilities from scratch.
         Q = np.ones((Constants.K, Constants.L)) * np.inf
 
         # Set where swan is in the same location as in the robot: [x_r,y_r,x_s,y_s] -> xr + yr*M + xs*M*N + ys*M*N*M
