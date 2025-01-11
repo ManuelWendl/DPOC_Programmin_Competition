@@ -53,7 +53,6 @@ def solution(P, Q, Constants):
     u_opt = np.zeros(Constants.K)
 
     # TODO implement Value Iteration, Policy Iteration,
-    #      Linear Programming or a combination of these
 
     solvers = ['VI','PI_VI','PI_SLE','PI_SLE_Reduced','LP']
     solver = solvers[3]
@@ -106,17 +105,5 @@ def solution(P, Q, Constants):
         
         J_opt[considered_states] = J_red
         u_opt[considered_states] = u_red
-
-    
-    #if solver == 'LP':
-    #    # Not functional yet
-    #    c = np.ones_like(J_opt)
-    #    P_reshaped = P.reshape(Constants.K * Constants.L, Constants.K)
-    #    Q_reshaped = Q.reshape(Constants.K * Constants.L,)
-    #    eyes = np.repeat(np.eye(Constants.K),Constants.L,axis=0)
-    #    A = eyes-P_reshaped
-
-    #    J_opt = sc.optimize.linprog(c,A_ub=A,b_ub=Q_reshaped).x
-    #    u_opt = np.argmin(Q+np.einsum('ijk,j->ik',P,J_opt),axis=1)
 
     return J_opt, u_opt
